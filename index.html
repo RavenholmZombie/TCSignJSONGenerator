@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Custom Sign Pack Generator</title>
+  <style>
+    body {
+      background-color: #282c34;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .form-container {
+      width: 50%;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .button {
+      background-color: #61dafb;
+      color: #000000;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .json-container {
+      width: 50%;
+      padding-left: 20px;
+    }
+
+    h2 {
+      margin-bottom: 15px;
+    }
+
+    pre {
+      background-color: #1e1e1e;
+      padding: 15px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-container">
+      <h2>Create Custom Sign Pack</h2>
+      <form id="signPackForm">
+        <div class="form-group">
+          <label for="name">Pack Name:</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="author">Author:</label>
+          <input type="text" id="author" name="author" required>
+        </div>
+        <div class="form-group">
+          <label for="packId">Pack ID:</label>
+          <input type="text" id="packId" name="packId" pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}" required>
+        </div>
+        <div id="signsContainer">
+          <div class="sign-group">
+            <h4>Sign:</h4>
+            <div class="form-group">
+              <label for="signName">Sign Name:</label>
+              <input type="text" class="signName" name="signName[]" required>
+            </div>
+            <div class="form-group">
+              <label for="signType">Sign Type:</label>
+              <input type="text" class="signType" name="signType[]" required>
+            </div>
+            <div class="form-group">
+              <label for="frontImage">Front Image:</label>
+              <input type="text" class="frontImage" name="frontImage[]" required>
+            </div>
+            <div class="form-group">
+              <input type="checkbox" class="addTextLines" name="addTextLines[]">
+              <label for="addTextLines">Add Text Lines</label>
+            </div>
+            <div class="textLinesContainer" style="display: none;">
+              <h4>Text Line:</h4>
+              <div class="form-group">
+                <label for="label">Label:</label>
+                <input type="text" class="label" name="label[]">
+              </div>
+              <div class="form-group">
+                <label for="x">X:</label>
+                <input type="number" class="x" name="x[]">
+              </div>
+              <div class="form-group">
+                <label for="y">Y:</label>
+                <input type="number" class="y" name="y[]">
+              </div>
+              <div class="form-group">
+                <label for="width">Width:</label>
+                <input type="number" class="width" name="width[]">
+              </div>
+              <div class="form-group">
+                <label for="maxlength">Max Length:</label>
+                <input type="number" class="maxlength" name="maxlength[]">
+              </div>
+              <div class="form-group">
+                <label for="xscale">X Scale:</label>
+                <input type="number" class="xscale" name="xscale[]">
+              </div>
+              <div class="form-group">
+                <label for="yscale">Y Scale:</label>
+                <input type="number" class="yscale" name="yscale[]">
+              </div>
+              <div class="form-group">
+                <label for="halign">Horizontal Align:</label>
+                <select class="halign" name="halign[]">
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="valign">Vertical Align:</label>
+                <select class="valign" name="valign[]">
+                  <option value="top">Top</option>
+                  <option value="center">Center</option>
+                  <option value="bottom">Bottom</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="color">Color:</label>
+                <input type="color" class="color" name="color[]">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <button type="button" id="addSignButton" class="button">Add Sign</button>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="button">Generate JSON</button>
+        </div>
+      </form>
+    </div>
+    <div class="json-container">
+      <h2>Generated JSON:</h2>
+      <pre id="jsonResult"></pre>
+      <div class="form-group">
+        <button type="button" id="downloadButton" class="button" style="display: none;">Download JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('addSignButton').addEventListener('click', function() {
+      var signsContainer = document.getElementById('signsContainer');
+      var signGroup = document.createElement('div');
+      signGroup.classList.add('sign-group');
+
+      var signHTML = `
+        <h4>Sign:</h4>
+        <div class="form-group">
+          <label for="signName">Sign Name:</label>
+          <input type="text" class="signName" name="signName[]" required>
+        </div>
+        <div class="form-group">
+          <label for="signType">Sign Type:</label>
+          <input type="text" class="signType" name="signType[]" required>
+        </div>
+        <div class="form-group">
+          <label for="frontImage">Front Image:</label>
+          <input type="text" class="frontImage" name="frontImage[]" required>
+        </div>
+        <div class="form-group">
+          <input type="checkbox" class="addTextLines" name="addTextLines[]">
+          <label for="addTextLines">Add Text Lines</label>
+        </div>
+        <div class="textLinesContainer" style="display: none;">
+          <h4>Text Line:</h4>
+          <div class="form-group">
+            <label for="label">Label:</label>
+            <input type="text" class="label" name="label[]">
+          </div>
+          <div class="form-group">
+            <label for="x">X:</label>
+            <input type="number" class="x" name="x[]">
+          </div>
+          <div class="form-group">
+            <label for="y">Y:</label>
+            <input type="number" class="y" name="y[]">
+          </div>
+          <div class="form-group">
+            <label for="width">Width:</label>
+            <input type="number" class="width" name="width[]">
+          </div>
+          <div class="form-group">
+            <label for="maxlength">Max Length:</label>
+            <input type="number" class="maxlength" name="maxlength[]">
+          </div>
+          <div class="form-group">
+            <label for="xscale">X Scale:</label>
+            <input type="number" class="xscale" name="xscale[]">
+          </div>
+          <div class="form-group">
+            <label for="yscale">Y Scale:</label>
+            <input type="number" class="yscale" name="yscale[]">
+          </div>
+          <div class="form-group">
+            <label for="halign">Horizontal Align:</label>
+            <select class="halign" name="halign[]">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="valign">Vertical Align:</label>
+            <select class="valign" name="valign[]">
+              <option value="top">Top</option>
+              <option value="center">Center</option>
+              <option value="bottom">Bottom</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="color">Color:</label>
+            <input type="color" class="color" name="color[]">
+          </div>
+        </div>
+      `;
+
+      signGroup.innerHTML = signHTML;
+      signsContainer.appendChild(signGroup);
+
+      var addTextLinesCheckbox = signGroup.querySelector('.addTextLines');
+      var textLinesContainer = signGroup.querySelector('.textLinesContainer');
+
+      addTextLinesCheckbox.addEventListener('change', function() {
+        if (addTextLinesCheckbox.checked) {
+          textLinesContainer.style.display = 'block';
+        } else {
+          textLinesContainer.style.display = 'none';
+        }
+      });
+    });
+
+    document.getElementById('signPackForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var form = this;
+
+      var signs = [];
+      var types = {};
+
+      var signNames = form.querySelectorAll('.signName');
+      var signTypes = form.querySelectorAll('.signType');
+      var frontImages = form.querySelectorAll('.frontImage');
+      var addTextLinesCheckboxes = form.querySelectorAll('.addTextLines');
+      var labels = form.querySelectorAll('.label');
+      var xValues = form.querySelectorAll('.x');
+      var yValues = form.querySelectorAll('.y');
+      var widths = form.querySelectorAll('.width');
+      var maxLengths = form.querySelectorAll('.maxlength');
+      var xScales = form.querySelectorAll('.xscale');
+      var yScales = form.querySelectorAll('.yscale');
+      var hAligns = form.querySelectorAll('.halign');
+      var vAligns = form.querySelectorAll('.valign');
+      var colors = form.querySelectorAll('.color');
+
+      for (var i = 0; i < signNames.length; i++) {
+        var sign = {
+          id: generateUUID(),
+          name: signNames[i].value,
+          type: signTypes[i].value,
+          front: frontImages[i].value
+        };
+
+        if (!types[sign.type]) {
+          types[sign.type] = sign.type;
+        }
+
+        if (addTextLinesCheckboxes[i].checked) {
+          sign.textlines = [{
+            label: labels[i].value,
+            x: parseInt(xValues[i].value),
+            y: parseInt(yValues[i].value),
+            width: parseInt(widths[i].value),
+            maxlength: parseInt(maxLengths[i].value),
+            xscale: parseInt(xScales[i].value),
+            yscale: parseInt(yScales[i].value),
+            halign: hAligns[i].value,
+            valign: vAligns[i].value,
+            color: colors[i].value
+          }];
+        }
+
+        signs.push(sign);
+      }
+
+      var signPack = {
+        name: form.elements.name.value,
+        author: form.elements.author.value,
+        pack_id: form.elements.packId.value,
+        types: types,
+        signs: signs
+      };
+
+      var jsonResult = document.getElementById('jsonResult');
+      jsonResult.textContent = JSON.stringify(signPack, null, 2);
+
+      var downloadButton = document.getElementById('downloadButton');
+      downloadButton.style.display = 'block';
+      downloadButton.addEventListener('click', function() {
+        var jsonFile = new Blob([jsonResult.textContent], {type: 'application/json'});
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(jsonFile);
+        a.download = 'custom_sign_pack.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+    });
+
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0,
+            v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+  </script>
+</body>
+</html>
